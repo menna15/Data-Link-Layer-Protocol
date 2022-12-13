@@ -107,22 +107,29 @@ void Node::receive_msg(){
 }
 void Node::handleMessage(cMessage *msg)
 {
+    // get the line message from the coordinator and get two informations 1) Node should start 2) Time to start
     std::string line=msg->getName();
     std::string node=line.substr(0, 1);
     std::string start_time=line.substr(2, line.length());
 
     // wait until start time
     if(msg->isSelfMessage()){
-        allow_to_send = true;
+         // when get self message in Time then allow to send if ot is sender
+         allow_to_send = true;
     }else
     {
-            if(( strcmp(getName(),"node0")==0 && strcmp(node.c_str(),"0")==0 ) || ( strcmp(getName(),"node1")==0 && strcmp(node.c_str(),"1")==0 ) ){
-               EV<<getName()<<" Senderr "<<endl;
-               scheduleAt(std::stod(start_time), new cMessage(" self messaging .."));
-               is_sender = true;
-            }else{
-                EV<<getName()<<" Reciveer "<<endl;
-            }
+        // when it is the first message from coordinator
+
+        if ((strcmp(getName(), "node0") == 0 && strcmp(node.c_str(), "0") == 0) || (strcmp(getName(), "node1") == 0 && strcmp(node.c_str(), "1") == 0))
+        {
+             EV << getName() << " Senderr " << endl;
+             scheduleAt(std::stod(start_time), new cMessage(" self messaging .."));
+             is_sender = true;
+        }
+        else
+        {
+             EV << getName() << " Reciveer " << endl;
+        }
     }
     if (is_sender)
     {
