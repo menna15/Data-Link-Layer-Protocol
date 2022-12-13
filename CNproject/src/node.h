@@ -18,6 +18,10 @@
 
 #include <omnetpp.h>
 #include <bitset>
+
+typedef  std::bitset<8> bits;
+#include "MyMessage_m.h"
+
 using namespace omnetpp;
 
 /**
@@ -27,8 +31,10 @@ class Node : public cSimpleModule
 {
   protected:
     virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
     virtual  std::bitset<8> ParityByteErrorDetection(std::string payload);
+    virtual void handleMessage(MyMessage_Base *msg);
+    virtual std::string byteStuffing(std::string msg);
+
 };
 
 #endif

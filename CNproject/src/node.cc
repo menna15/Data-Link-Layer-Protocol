@@ -14,9 +14,12 @@
 //
 
 #include "node.h"
-#include <bitset>
-#include <iostream>
 
+#include "MyMessage_m.h"
+#include <bitset>
+typedef  std::bitset<8> bits;
+#include <iostream>
+#include <fstream>
 Define_Module(Node);
 std::bitset<8> Node::ParityByteErrorDetection(std::string payload)
 {
@@ -32,15 +35,41 @@ std::bitset<8> Node::ParityByteErrorDetection(std::string payload)
     return result;
 }
 
+std::string Node::byteStuffing(std::string payload)
+{
+    std::string payload_after_stuffing = "$";
+    for(int i = 0; i < payload.size(); i++)
+    {
+        if (payload[i] == '$' || payload[i] == '/')
+        {
+            payload_after_stuffing = payload_after_stuffing + "/";
+        }
+        payload_after_stuffing = payload_after_stuffing + payload[i];
+    }
+
+    payload_after_stuffing = payload_after_stuffing + "$";
+
+    std::cout << " the Message after applying byte stuffing is "<<payload_after_stuffing<<endl;
+    return payload_after_stuffing;
+
+}
+
 void Node::initialize()
 {
+    // for testing framing
+    std::string bmsg = byteStuffing("$/Eng/Menna");
+    EV<<bmsg<<endl;
     // TODO - Generated method body
 }
 
-void Node::handleMessage(cMessage *msg)
+void Node::handleMessage(MyMessage_Base *msg)
 {
     EV << "From Node" << msg->getName() << endl;
     std::cout<< ParityByteErrorDetection("hi")<< endl;
 }
+
+
+
+
 
 
