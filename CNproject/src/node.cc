@@ -56,16 +56,17 @@ std::string Node::byteStuffing(std::string payload)
 
 void Node::initialize()
 {
-    // for testing framing
-    std::string bmsg = byteStuffing("$/Eng/Menna");
-    EV<<bmsg<<endl;
+    // for testing bytestuffing and parity byte
+    std::cout<< byteStuffing("$/Eng/Menna")<<endl;
+    std::cout<< ParityByteErrorDetection("4hi")<< endl;
+
     // TODO - Generated method body
 }
 
 void Node::handleMessage(MyMessage_Base *msg)
 {
     EV << "From Node" << msg->getName() << endl;
-    std::cout<< ParityByteErrorDetection("hi")<< endl;
+
 }
 
 
