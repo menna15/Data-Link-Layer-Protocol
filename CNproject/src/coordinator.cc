@@ -34,21 +34,14 @@ void Coordinator::initialize()
     } else {
         getline(filestream, line);
         EV<<line;
-        std::string node=line.substr(0, 1);
-        std::string time=line.substr(2, line.length());
-        EV<< node<<endl;
-        EV<< time<<endl;
-//        int n = time.length();
-//        char char_array[n + 1];
-//        strcpy(char_array, time.c_str());
-        cMessage * msg= new cMessage(time.c_str());
-
-        if(strcmp(node.c_str(),"0")==0){
-            send(msg,"out0");
-        }else{
-            send(msg,"out1");
-        }
-
+        //std::string node=line.substr(0, 1);
+        //std::string time=line.substr(2, line.length());
+//        EV<< node<<endl;
+//        EV<< time<<endl;
+        cMessage * msg= new cMessage(line.c_str());
+        cMessage * msg2= new cMessage(line.c_str());
+        send(msg,"out0");
+        send(msg2,"out1");
     }
 
     //parseInputLine(line);

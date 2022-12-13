@@ -14,6 +14,11 @@
 // 
 
 #include "node.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <fstream>
 
 Define_Module(Node);
 
@@ -22,7 +27,71 @@ void Node::initialize()
     // TODO - Generated method body
 }
 
+void Node::read_msgs( std::vector<std::string>& errors_arr, std::vector<std::string>& msg_arr  ){
+    std::string file_name="";
+    if(strcmp(getName(),"node0")==0){
+        file_name="input0.txt";
+    }else{
+        file_name="input1.txt";
+    }
+
+    EV<<file_name<<endl;
+
+    std::ifstream filestream;
+    std::string line;
+    filestream.open(file_name, std::ifstream::in);
+    if(!filestream) {
+          throw cRuntimeError("Error opening file '%s'?", "coordinator.txt");
+     } else {
+
+         while(getline(filestream, line)){
+             std::string error = line.substr(0, 4);
+             errors_arr.push_back(error);
+             std::string msg = line.substr(5, line.length());
+             msg_arr.push_back(msg);
+            //getline(filestream, line);
+         }
+     }
+}
+void Node::send_msg(){
+    std::vector<std::string>errors_arr;
+    std::vector<std::string>msg_arr;
+    read_msgs(errors_arr,msg_arr);
+    EV<<errors_arr[0] << " " << msg_arr[0] << endl;
+
+}
+void Node::receive_msg(){
+
+
+}
 void Node::handleMessage(cMessage *msg)
 {
-    EV<<"From Node"<<msg->getName()<<endl;
+    std::string line=msg->getName();
+    std::string node=line.substr(0, 1);
+    std::string start_time=line.substr(2, line.length());
+
+    // wait until start time
+    if(msg->isSelfMessage()){
+        allow_to_send = true;
+    }else
+    {
+            if(( strcmp(getName(),"node0")==0 && strcmp(node.c_str(),"0")==0 ) || ( strcmp(getName(),"node1")==0 && strcmp(node.c_str(),"1")==0 ) ){
+               EV<<getName()<<" Senderr "<<endl;
+               scheduleAt(std::stod(start_time), new cMessage(" self messaging .."));
+               is_sender = true;
+            }else{
+                EV<<getName()<<" Reciveer "<<endl;
+            }
+    }
+    if (is_sender)
+    {
+        if(allow_to_send){
+            EV<<line<<endl;
+            send_msg();
+        }
+    }else
+    {
+        receive_msg();
+    }
+    //EV<<"From Node"<<msg->getName()<<endl;
 }
