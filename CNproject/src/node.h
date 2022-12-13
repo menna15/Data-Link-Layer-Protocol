@@ -17,7 +17,7 @@
 #define __CNPROJECT_NODE_H_
 
 #include <omnetpp.h>
-
+#include <bitset>
 using namespace omnetpp;
 
 /**
@@ -28,6 +28,7 @@ class Node : public cSimpleModule
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
+    virtual  std::bitset<8> ParityByteErrorDetection(std::string payload);
 };
 
 #endif
