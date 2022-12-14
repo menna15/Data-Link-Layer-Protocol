@@ -7,5 +7,3 @@ network = Network
 **.transmission_delay = 1.0
 **.time_out = 10
 **.loss_prob = 0.1
-
-

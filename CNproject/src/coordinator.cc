@@ -14,13 +14,11 @@
 // 
 
 #include "coordinator.h"
+#include "MyMessage_m.h"
 #include <iostream>
 #include <fstream>
 
 Define_Module(Coordinator);
-
-
-
 void Coordinator::initialize()
 {
 
@@ -29,17 +27,23 @@ void Coordinator::initialize()
 
     filestream.open("coordinator.txt", std::ifstream::in);
 
-    if(!filestream) {
+    if(!filestream)
+    {
         throw cRuntimeError("Error opening file '%s'?", "coordinator.txt");
-    } else {
-        getline(filestream, line);
-        EV<<line;
-        //std::string node=line.substr(0, 1);
-        //std::string time=line.substr(2, line.length());
-//        EV<< node<<endl;
-//        EV<< time<<endl;
-        cMessage * msg= new cMessage(line.c_str());
-        cMessage * msg2= new cMessage(line.c_str());
+
+    }
+    else
+    {
+        std::getline(filestream, line);
+        EV<<"I am coordinator and I read : "<<line<<endl;
+        MyMessage_Base *msg = new MyMessage_Base((char*)"coord");
+        msg->setM_Payload(line.c_str());
+        msg->setSeq_Num(-1);
+
+        MyMessage_Base *msg2 = new MyMessage_Base((char*)"coord");
+        msg2->setM_Payload(line.c_str());
+        msg2->setSeq_Num(-1);
+
         send(msg,"out0");
         send(msg2,"out1");
     }

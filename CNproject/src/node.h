@@ -24,6 +24,16 @@ typedef  std::bitset<8> bits;
 
 using namespace omnetpp;
 
+enum event_type
+{
+  network_layer_ready,
+  frame_arrival,
+  ack_arrival,
+  cksum_err,
+  timeout
+
+};
+
 /**
  * TODO - Generated class
  */
@@ -31,14 +41,46 @@ class Node : public cSimpleModule
 {
   bool is_sender=false;
   bool allow_to_send=false;
+  int start_transmission = -1;                              // start transmission time
+  std::vector<std::string>errors_arr;
+  std::vector<std::string> msg_arr;
+
+
+  // Sender variables
+  int ack_expected;                                         // Lower edge of sender's window
+  int next_frame_to_send;                                   // Upper edge of sender's window + 1
+  int nbuffered;                                            // number of frames sent till now
+  std::vector<std::pair<std::string, std::string>> outbuffer;
+
+  // Receiver variables
+  int frame_expected;                                       // Lower edge of receiver's window
+  MyMessage_Base * received_frame;
+
+
+  int WS;                          // window size
+  int max_seq_number;              //MAX_SEQ = 2^m - 1
+
+
   protected:
     virtual void initialize();
-    virtual void receive_msg();
-    virtual void read_msgs( std::vector<std::string>& errors_arr, std::vector<std::string>& msg_arr);
-    virtual void send_msg();
-    virtual  std::bitset<8> ParityByteErrorDetection(std::string payload);
-    virtual void handleMessage(MyMessage_Base *msg);
-    virtual std::string byteStuffing(std::string msg);
+    virtual void handleMessage(cMessage *msg);
+
+    bits ParityByteErrorDetection(std::string payload);
+    std::string byteStuffing(std::string msg);
+
+    void read_msgs();
+
+    void receiveFrame(MyMessage_Base *msg);
+    void sendFrame(int frame_num, int frame_type, int frame_expected);
+
+    std::vector<std::string> splitLine(std::string line);
+    bool between(int sf, int si, int sn);
+    void inc(int & num);
+    void toPhysicalLayer(MyMessage_Base *msg_to_send, std::string error_bits);
+    void fromPhysicalLayer(MyMessage_Base *msg_received);
+    bool fromNetworkLayer();
+    void enableNetworkLayer();
+    void disableNetworkLayer();
 
 };
 

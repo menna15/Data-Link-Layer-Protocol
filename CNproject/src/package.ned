@@ -20,5 +20,7 @@ network Network
     connections:
         coordinator.out0 --> node0.incor;
         coordinator.out1 --> node1.incor;
+        node1.to_pair --> node0.from_pair;
+        node0.to_pair --> node1.from_pair;
 }
 

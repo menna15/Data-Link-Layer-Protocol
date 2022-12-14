@@ -20,6 +20,15 @@ package cnproject;
 //
 simple Node
 {
+    int window_size;
+    double processing_delay;
+    double duplication_delay;
+	double error_delay;
+	double transmission_delay;
+	double time_out;
+	double loss_prob;
     gates:
         input incor;
+        input from_pair;
+        output to_pair;
 }
