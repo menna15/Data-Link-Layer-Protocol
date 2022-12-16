@@ -30,7 +30,7 @@ typedef  std::bitset<8> bits;
  * {
  *     \@customize(true);  // see the generated C++ header for more info
  *     int Seq_Num;       // Header.
- *     int M_Type;        // Frame Type  : data = 0 , ACK = 1, NACK = 2
+ *     int M_Type;        // Frame Type  : data = 0 , ACK = 1, NACK = 2, TIMEOUT = 3.
  *     string M_Payload;  // the message contents after byte stuffing (in characters).
  *     bits Trailer;      // the parity byte.
  *     int ACK_NACK;      // ACK/NACK number.
