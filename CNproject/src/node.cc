@@ -43,6 +43,7 @@ void Node::stopTimer(int frame_num){
             EV<<"Stopped timer for frame "<<frame_num<<endl;
 
             cancelAndDelete(timer_msg_arr[frame_num]);
+            EV<< "Timer Size: "<<timer_msg_arr.size()<<endl;
         }
     
 }
@@ -401,21 +402,24 @@ void Node::receiveFrame(MyMessage_Base *msg)
         }
         break;
     case timeout:
-        // stop timers of all frames in window
-        EV<<"Timeout of message with seq num:"<<msg->getSeq_Num()<<endl;
-        next_frame_to_send = ack_expected;
-        outbuffer[next_frame_to_send].first = "0000";
-
-        for (int i = 1; i <= nbuffered; i++)
-        {
-            stopTimer(i);
-            MyMessage_Base *msg_to_send = new MyMessage_Base();
-            msg_to_send->setSeq_Num(-3);
-            //    EV<<"enableNetworkLayer"<<simTime()<<endl;
-            scheduleAt(simTime() + (i)*par("processing_delay").doubleValue(), msg_to_send);
+        {// stop timers of all frames in window
+            EV<<"Timeout of message with seq num:"<<msg->getSeq_Num()<<endl;
+            next_frame_to_send = ack_expected;
+            outbuffer[0].first = "0000";
+            int temp = ack_expected;
+            
+            for (int i = 1; i <= nbuffered; i++)
+            {
+                stopTimer(temp);
+                inc(temp);
+                MyMessage_Base *msg_to_send = new MyMessage_Base();
+                msg_to_send->setSeq_Num(-3);
+                //    EV<<"enableNetworkLayer"<<simTime()<<endl;
+                scheduleAt(simTime() + (i)*par("processing_delay").doubleValue(), msg_to_send);
+            }
+            
+            break;
         }
-           
-        break;
     case slide_back:
         EV<<"slide back"<<endl;
         sendFrame(next_frame_to_send, 0, frame_expected);
