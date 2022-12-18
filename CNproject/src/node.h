@@ -29,7 +29,7 @@ enum event_type
   network_layer_ready,
   frame_arrival,
   ack_arrival,
-  cksum_err,
+  nack_arrival,
   slide_back,
   send_ack,
   send_nack,

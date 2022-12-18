@@ -61,7 +61,7 @@ void Node::inc(int &num)
 // **********************************************************************************************
 bool Node::between(int sf, int si, int sn)
 {
-    return (((sf <= si) && (si < sn)) || ((sn < sf) && (sf <= si)) || ((si < sn) && (sn < sf)));
+    return (((sf <= si) && (si < sn)) || ((sn < sf) && (sf <= si)) || ((si < sn) && (sn < sf))|| sf == sn);
 }
 
 // **********************************************************************************************
@@ -107,7 +107,27 @@ void Node::toPhysicalLayer(MyMessage_Base *msg_to_send, std::string error_bits)
     {
         if (error_bits == "0000") // no error
         {
-            sendDelayed(msg_to_send, TD, "to_pair");
+
+            if(msg_to_send->getM_Type() == 1 || msg_to_send->getM_Type() == 2)
+            {
+                int rand = uniform(0, 1)*10;
+                EV<<"random generated is"<<rand<<endl;
+                // send ack/ nack with probability 1-par("loss_prob").doubleValue()
+                if(rand<((1-par("loss_prob").doubleValue())*10))
+                {
+                    sendDelayed(msg_to_send, TD, "to_pair");
+                }
+                else
+                {
+                    EV<<"Ack/Nack with number"<<msg_to_send->getACK_NACK()<<"lost"<<endl;
+
+                }
+            }
+            else // not ack/ nack
+            {
+                sendDelayed(msg_to_send, TD, "to_pair");
+
+            }   
         }
         else
         {
@@ -344,7 +364,7 @@ void Node::receiveFrame(MyMessage_Base *msg)
     else
     {
         EV<<"I am: "<<getName()<<" and I received cksum_err"<<endl;
-        event = cksum_err;
+        event = nack_arrival;
     } 
     switch (event)
     {
@@ -372,14 +392,22 @@ void Node::receiveFrame(MyMessage_Base *msg)
             //sendFrame(received_frame->getSeq_Num(), 1, frame_expected); // send ack
             // still not handle if this message is a duplicated one
         }
-        else
+        else if (received_frame->getSeq_Num() == (frame_expected-1+WS)%WS && (received_frame->getTrailer() == ParityByteErrorDetection(received_frame->getM_Payload())))
         {
-           MyMessage_Base *msg_to_send = new MyMessage_Base();
-            msg_to_send->setSeq_Num(-4);
+            MyMessage_Base *msg_to_send = new MyMessage_Base();
+            msg_to_send->setSeq_Num(-3);
             msg_to_send->setACK_NACK(frame_expected);
-
             scheduleAt(simTime() + par("processing_delay").doubleValue(), msg_to_send);
-            //sendFrame(received_frame->getSeq_Num(), 2, frame_expected); // send nack
+
+
+        }
+        else{
+            MyMessage_Base *msg_to_send = new MyMessage_Base();
+               msg_to_send->setSeq_Num(-4);
+               msg_to_send->setACK_NACK(frame_expected);
+
+               scheduleAt(simTime() + par("processing_delay").doubleValue(), msg_to_send);
+               //sendFrame(received_frame->getSeq_Num(), 2, frame_expected); // send nack
         }
         break;
     case send_ack:
@@ -392,13 +420,33 @@ void Node::receiveFrame(MyMessage_Base *msg)
     case ack_arrival:
         fromPhysicalLayer(msg);
         EV << "I am " << getName() << " I received ack with number: " << msg->getACK_NACK() << endl;
-        if (received_frame->getACK_NACK() == (ack_expected+1)%WS)
+        EV<<"ack_expected: "<<ack_expected<<endl;
+        EV<<"received_frame->getACK_NACK()-1: "<<((received_frame->getACK_NACK()-1)+WS)%WS<<endl;
+        EV<<"next_frame_to_send: "<<next_frame_to_send<<endl;
+        if (between(ack_expected, ((received_frame->getACK_NACK()-1)+WS)%WS, next_frame_to_send))
         {
+            
             // stop_timer
-            stopTimer(ack_expected);
-            inc(ack_expected);
-            nbuffered -= 1;
-            outbuffer.erase(outbuffer.begin());
+            if(ack_expected==((received_frame->getACK_NACK()-1)+WS)%WS)
+                {
+                    stopTimer(ack_expected);
+                    inc(ack_expected);
+                    nbuffered -= 1;
+                    outbuffer.erase(outbuffer.begin());
+                }
+            else
+            {
+                std::cout<<"Bustedddd"<<endl;
+                while(ack_expected!= received_frame->getACK_NACK())
+                {
+                    stopTimer(ack_expected);
+                    inc(ack_expected);
+                    nbuffered -= 1;
+                    outbuffer.erase(outbuffer.begin());
+                }
+
+
+            }
         }
         break;
     case timeout:
@@ -425,7 +473,8 @@ void Node::receiveFrame(MyMessage_Base *msg)
         sendFrame(next_frame_to_send, 0, frame_expected);
         inc(next_frame_to_send);
         break;
-
+    case nack_arrival:
+        EV << "I am " << getName() << " I received Nack with number: " << msg->getACK_NACK() << endl;
     default:
         EV << "Default of switch case" << endl;
     }
@@ -455,13 +504,6 @@ void Node::handleMessage(cMessage *msg)
 {
     MyMessage_Base *received_msg = check_and_cast<MyMessage_Base *>(msg);
 
-    // wait until start time
-    //    if(received_msg->getSeq_Num() == -2)
-    //    {
-    //        // when get self message in Time then allow to send if it is the sender
-    //        // frame num = 0, frame type = 0 , frame expected = 0
-    //        sendFrame(0,0,0);
-    //    }
     // when it is the first message from coordinator it will has sequence number -1
     if (received_msg->getSeq_Num() == -1)
     {
@@ -520,6 +562,7 @@ void Node::initialize()
         timer_arr.push_back(par("time_out").doubleValue());
     }
     std::cout<<"times length:"<<timer_msg_arr.size()<<endl;
-
+    
+    std::cout<<"test between function with inputs 2, 0, 1:  "<< between(2, 1, 0)<<endl;
     // TODO - Generated method body
 }
