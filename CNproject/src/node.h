@@ -18,7 +18,7 @@
 
 #include <omnetpp.h>
 #include <bitset>
-
+#include <fstream>
 typedef std::bitset<8> bits;
 #include "MyMessage_m.h"
 
@@ -42,31 +42,39 @@ enum event_type
  */
 class Node : public cSimpleModule
 {
-  bool is_sender = false;
-  bool allow_to_send = false;
+  
+  bool is_sender = false; // true if sender, false if receiver
   int start_transmission = -1; // start transmission time
-  std::vector<std::string> errors_arr;
-  std::vector<std::string> msg_arr;
-
-  // add timer for each frame
-  std::vector<int> timer_arr;
-  // add timer_msg for each frame
-  std::vector<MyMessage_Base *> timer_msg_arr;
-
+  /*** parameters from omnetpp.ini ***/
+  double PD; // processing delay
+  double DD; // duplication delay
+  double ED; // error delay
+  double TD; // transmission delay
+  int WS; // window size
+  /*****************************/
+  std::vector<std::string> errors_arr; // for storing the error codes for each frame
+  std::vector<std::string> msg_arr;   // for storing the messages to be sent
+  /****************************/
+  int node_id; // to identify the node with 0 or 1 (used for printing the output)
+  /*****time out variables*****/
+  std::vector<int> timer_arr; // store the timeout interval for each frame
+  std::vector<MyMessage_Base *> timer_msg_arr; // add timer_msg for each frame that carries the frame number, each has a message type = 3
+  /****************************/
   // Sender variables
   int ack_expected;       // Lower edge of sender's window
   int next_frame_to_send; // Upper edge of sender's window + 1
   int nbuffered;          // number of frames sent till now
+  int max_seq_number; // MAX_SEQ = 2^m - 1
+  double last_send_time; // to prevent 2 frames from being sent at the same time
+  int num_frames_scheduled; // num of frames that wanted to be sent at the same time
   std::vector<std::pair<std::string, std::string>> outbuffer;
-
   // Receiver variables
   int frame_expected; // Lower edge of receiver's window
-  MyMessage_Base *received_frame;
-
-  int WS;             // window size
-  int max_seq_number; // MAX_SEQ = 2^m - 1
-  int num_frames_scheduled;
-  double last_send_time;
+  MyMessage_Base *received_frame; // for storing the received frame
+  std::string prev_payload; // for storing the previous payload, to check for frames that have been received before
+  // for output file
+  std::ofstream output_file; 
+  std::string output_file_name;
 
 protected:
   virtual void initialize();
@@ -90,8 +98,6 @@ protected:
   void disableNetworkLayer();
   void startTimer(int frame_num);
   void stopTimer(int frame_num);
-  template <size_t N1, size_t N2 >
-  std::bitset<N1 + N2> concat( const std::bitset <N1> & b1, const std::bitset <N2> & b2 );
 };
 
 #endif
